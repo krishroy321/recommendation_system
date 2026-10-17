@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://musicrec:musicrec@localhost:5433/musicrec")
-MUSIC_DIR = Path(os.environ.get("MUSIC_DIR", "/music"))
-MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/models"))
+MUSIC_DIR = Path(os.environ.get("MUSIC_DIR", "./music"))
+MODEL_DIR = Path(os.environ.get("MODEL_DIR", "./models"))
 AUDIO_EXT = {".mp3", ".flac", ".wav", ".m4a", ".ogg", ".opus", ".aac"}
 
 # ---- audio analysis ----

@@ -26,7 +26,7 @@ services:
       WORKERS: ${WORKERS:-4}
       LANG_K: ${LANG_K:-0}
     volumes:
-      - ${MUSIC_DIR:-${HOME}/Music/songs}:/music:ro
+      - ./musicrec/music:/music:ro
       - models:/models
     ports:
       - "8000:8000"

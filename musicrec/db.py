@@ -67,17 +67,36 @@ def arr(v):
     return np.asarray(v)
 
 
-def init(retries: int = 60):
-    for _ in range(retries):
+
+def init(retries: int = 3):
+    for attempt in range(1, retries + 1):
         try:
-            with psycopg.connect(C.DATABASE_URL, autocommit=True) as con:
+            print(f"[db.init] Attempt {attempt}: connecting...", flush=True)
+
+            with psycopg.connect(
+                C.DATABASE_URL,
+                autocommit=True,
+                connect_timeout=5,
+            ) as con:
+                print("[db.init] Connected. Acquiring lock...", flush=True)
                 con.execute("SELECT pg_advisory_lock(424242)")
+
+                print("[db.init] Running schema...", flush=True)
                 con.execute(SCHEMA)
+
+                print("[db.init] Releasing lock...", flush=True)
                 con.execute("SELECT pg_advisory_unlock(424242)")
+
+            print("[db.init] Success.", flush=True)
             return
-        except psycopg.OperationalError:
-            time.sleep(1)
-    sys.exit("database not reachable")
+
+        except psycopg.OperationalError as e:
+            print(f"[db.init] OperationalError: {e!r}", flush=True)
+            if attempt < retries:
+                time.sleep(1)
+
+    sys.exit("Database initialization failed after 3 attempts")
+
 
 
 def connect():

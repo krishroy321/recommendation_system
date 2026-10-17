@@ -21,20 +21,38 @@ class Recommender:
             r = con.execute(f"SELECT {COLS} FROM songs WHERE id=%s", (sid,)).fetchone()
         return _song(r) if r else None
 
+    
     def search(self, q="", limit=40, language=None):
         q = (q or "").strip().lower()
+
         hay = "lower(title || ' ' || artist || ' ' || folder)"
-        where, params = [], {"q": q, "n": limit}
+        where = []
+        params = {"n": max(1, min(int(limit), 100))}
+
         if language:
-            where.append("lang_name = %(lang)s"); params["lang"] = language
+            where.append("lang_name = %(lang)s")
+            params["lang"] = language
+
         if q:
-            where.append(f"({hay} LIKE '%%' || %(q)s || '%%' OR word_similarity(%(q)s, {hay}) > 0.35)")
+            params["q"] = q
+            where.append(
+                f"({hay} LIKE '%%' || %(q)s || '%%' "
+                f"OR word_similarity(%(q)s, {hay}) > 0.35)"
+            )
             order = f"word_similarity(%(q)s, {hay}) DESC, title"
         else:
             order = "title"
-        sql = f"SELECT {COLS} FROM songs WHERE {' AND '.join(where)} ORDER BY {order} LIMIT %(n)s"
+
+        where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+
+        sql = (
+            f"SELECT {COLS} FROM songs "
+            f"{where_sql} ORDER BY {order} LIMIT %(n)s"
+        )
+
         with self.pool.connection() as con:
             return [_song(r) for r in con.execute(sql, params)]
+
 
     def languages(self):
         with self.pool.connection() as con:
