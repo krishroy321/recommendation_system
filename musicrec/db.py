@@ -105,7 +105,18 @@ def connect():
     return con
 
 
+
 def make_pool() -> ConnectionPool:
-    return ConnectionPool(C.DATABASE_URL, min_size=1, max_size=8, open=True,
-                          kwargs={"autocommit": True},
-                          configure=lambda c: register_vector(c))
+    return ConnectionPool(
+        C.DATABASE_URL,
+        min_size=1,
+        max_size=8,
+        open=True,
+        timeout=10,
+        kwargs={
+            "autocommit": True,
+            "connect_timeout": 5,
+        },
+        configure=lambda c: register_vector(c),
+    )
+
